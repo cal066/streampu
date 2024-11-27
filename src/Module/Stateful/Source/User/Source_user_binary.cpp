@@ -53,7 +53,7 @@ template<typename B>
 void
 Source_user_binary<B>::_generate(B* out_data, uint32_t* out_count, const size_t frame_id)
 {
-    if (this->is_done())
+    if (this->is_done() || source_file.peek() == std::char_traits<char>::eof())
     {
         std::fill(out_data, out_data + this->max_data_size, (B)0);
         *out_count = 0;
@@ -69,8 +69,18 @@ Source_user_binary<B>::_generate(B* out_data, uint32_t* out_count, const size_t 
 
         while (n_bytes_read < n_bytes_needed)
         {
+            if(source_file.peek() == std::char_traits<char>::eof())
+            {
+                this->done = true;
+                break;
+            }
             source_file.read(this->memblk.data() + n_bytes_read, n_bytes_needed - n_bytes_read);
             n_bytes_read += source_file.gcount();
+
+            if(source_file.peek() == std::char_traits<char>::eof())
+            {
+                this->done = true;
+            }
 
             if (source_file.fail())
             {
